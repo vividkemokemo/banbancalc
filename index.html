@@ -52,11 +52,12 @@
             return $object;
         }
 
+        // 一時変数
+        // TODO:必要性を考慮すべき。名前も不適切につけている
         var tempGenka = 0; // 必要額原価
         var tempMugenKaryokuGoHituyougaku = -324.275; // 無限火力後の必要額
         var tempWaribikiriritu = 0.19; // 割引率 (小数)
         var tempHyoujigakukaranoWaribikiriritu = 0.2261; //表示額からの割引率
-
         var tempTaniRateA = -1000; //研究額÷獲得額 単位レート
         var tempTaniRateB = 1; //現在Exp÷研究額 単位レート
         var tempTaniRateC = 1; //必要Exp÷現在Exp 単位レート
@@ -108,23 +109,33 @@
             $currentExpUnit.text($unitOfCurrentExp.find("option:selected").text() + " Exp");
             $nextLevelUpgradeExpUnit.text($unitOfNextLvUpgradeExp.find("option:selected").text() + " Exp");
             $availableCoinPerBoxUnit.text($coinUnitOfGettingAndDonation.find("option:selected").text());
-            // $techDiscountUnit.text("%");
             $unitPriceForAllianceTechUnit.text($coinUnitOfGettingAndDonation.find("option:selected").text());
             $totalPriceForTechResearchUnit.text($coinUnitOfTechResearch.find("option:selected").text());
             $totalPriceForINFFirepowerUnit.text($coinUnitOfTechResearch.find("option:selected").text());
 
             // 結果計算
-            function ReCalc() {
-                console.log("ReCalc!");
+            ReCalc = function () {
+                // 一時変数の状態確認
+                // console.log("必要額原価", tempGenka);
+                // console.log("無限火力後の必要額", tempMugenKaryokuGoHituyougaku);
+                // console.log("割引率 (小数)", tempWaribikiriritu);
+                // console.log("表示額からの割引率", tempHyoujigakukaranoWaribikiriritu);
+                // console.log("研究額÷獲得額 単位レート", tempTaniRateA);
+                // console.log("現在Exp÷研究額 単位レート", tempTaniRateB);
+                // console.log("必要Exp÷現在Exp 単位レート", tempTaniRateC);
+
+                // 一時変数に計算結果を代入
                 tempGenka = (parseFloat($nextLevelUpgradeExp.val()) - parseFloat($currentExp.val()) * tempTaniRateC) * 5 * tempTaniRateB;
                 tempMugenKaryokuGoHituyougaku = tempGenka - (parseFloat($totalPriceForTechResearch.val()) + parseFloat($totalPriceForINFFirepower.val())) * (1 + tempWaribikiriritu)
                 tempWaribikiriritu = parseFloat($techDiscount.val()) / 100;
                 tempHyoujigakukaranoWaribikiriritu = (1 + tempWaribikiriritu) * tempWaribikiriritu
                 tempTaniRateA = ($coinUnitOfTechResearch.find("option:selected").val() - $coinUnitOfGettingAndDonation.find("option:selected").val()) * 1000
+
                 // 計算結果を設定
+                // - 次Lv必要金貨(無限火力なし)
                 var totalPriceForLvupResult = parseFloat(tempGenka) - parseFloat($totalPriceForTechResearch.val()) * parseFloat(tempHyoujigakukaranoWaribikiriritu);
                 $totalPriceForLvup.text(totalPriceForLvupResult + $coinUnitOfTechResearch.find("option:selected").text());
-
+                // - 次Lv必要金貨(無限火力あり)
                 var totalPriceForLvupWithInfFpResult = 0;
                 if (tempMugenKaryokuGoHituyougaku > 0) {
                     totalPriceForLvupWithInfFpResult = tempGenka - (parseFloat($totalPriceForTechResearch.val()) + parseFloat($totalPriceForINFFirepower.val())) * tempHyoujigakukaranoWaribikiriritu
@@ -133,22 +144,11 @@
                     totalPriceForLvupWithInfFpResult = (parseFloat($totalPriceForLvup.text()) + parseFloat($totalPriceForINFFirepower.val()))
                 }
                 $totalPriceForLvupWithInfFp.text(totalPriceForLvupWithInfFpResult + $coinUnitOfTechResearch.find("option:selected").text());
-                
-                // var a = parseFloat($totalPriceForLvup.text());
-                // console.log("parseFloat($totalPriceForLvup.text())", a);
-                // var b = parseFloat($totalPriceForTechResearch.val());
-                // console.log("parseFloat($totalPriceForTechResearch.val())", b);
-                // var c = tempTaniRateA;
-                // console.log("tempTaniRateA", tempTaniRateA);
-                // var d = parseFloat($unitPriceForAllianceTech.val());
-                // console.log("parseFloat($unitPriceForAllianceTech.val())", d);
-                // console.log("calc", (a - b)* c / d);
-                
+                // - 連盟寄付必要回数(無限火力なし)
                 var allianceTechForLvupResult = Math.ceil((parseFloat($totalPriceForLvup.text()) - parseFloat($totalPriceForTechResearch.val())) * tempTaniRateA / parseFloat($unitPriceForAllianceTech.val()));
                 $allianceTechForLvup.text(allianceTechForLvupResult + "回/times");
-
+                // - 連盟寄付必要回数(無限火力あり)
                 var allianceTechForLvupWithInfFpResult = 0;
-
                 if (tempMugenKaryokuGoHituyougaku > 0) {
                     allianceTechForLvupWithInfFpResult =
                         Math.ceil(
@@ -161,45 +161,14 @@
                             ) * tempTaniRateA / parseFloat($unitPriceForAllianceTech.val())
                         );
                 }
-
                 $allianceTechForLvupWithInfFp.text(allianceTechForLvupWithInfFpResult + "回/times");
 
-                // var aa = parseFloat($totalPriceForLvupWithInfFp.text());
-                // console.log("parseFloat($totalPriceForLvupWithInfFp.text())", aa);
-                // var bb = parseFloat($totalPriceForTechResearch.val());
-                // console.log("parseFloat($totalPriceForTechResearch.val())", bb);
-                // var cc = parseFloat($totalPriceForINFFirepower.val());
-                // console.log("parseFloat($totalPriceForINFFirepower.val())", cc);
-                // var dd = tempTaniRateA;
-                // console.log("tempTaniRateA", dd);
-                // var ee = parseFloat($unitPriceForAllianceTech.val());
-                // console.log("parseFloat($unitPriceForAllianceTech.val())", ee);
-                // console.log("calc", ((aa - bb - cc) * dd / ee));
-                // console.log("?calc",
-                //     Math.ceil(
-                //         (
-                //             (
-                //                 parseFloat($totalPriceForLvupWithInfFp.text()) -
-                //                 parseFloat($totalPriceForTechResearch.val()) -
-                //                 parseFloat($totalPriceForINFFirepower.val())
-                //             )
-                //         ) * tempTaniRateA / parseFloat($unitPriceForAllianceTech.val())
-                //     )
-                // );
-
+                // - 現時点のバンバン箱必要量(無限火力あり)
                 var neededCoinBoxesForLvupResult = Math.ceil((parseFloat($totalPriceForLvup.text()) - parseFloat($currentAvailableCoins.val())) * tempTaniRateA / parseFloat($availableCoinPerBox.val())) | 0;
                 $neededCoinBoxesForLvup.text(neededCoinBoxesForLvupResult + "箱/boxes");
-
+                // - 現時点のバンバン箱必要量(無限火力なし)
                 var neededCoinBoxesForLvupWithInfFpResult = Math.ceil((parseFloat($totalPriceForLvupWithInfFp.text()) - parseFloat($currentAvailableCoins.val())) * tempTaniRateA / parseFloat($availableCoinPerBox.val())) | 0;
                 $neededCoinBoxesForLvupWithInfFp.text(neededCoinBoxesForLvupWithInfFpResult + "箱/boxes");
-
-                // console.log("必要額原価", tempGenka);
-                // console.log("無限火力後の必要額", tempMugenKaryokuGoHituyougaku);
-                // console.log("割引率 (小数)", tempWaribikiriritu);
-                // console.log("表示額からの割引率", tempHyoujigakukaranoWaribikiriritu);
-                // console.log("研究額÷獲得額 単位レート", tempTaniRateA);
-                // console.log("現在Exp÷研究額 単位レート", tempTaniRateB);
-                // console.log("必要Exp÷現在Exp 単位レート", tempTaniRateC);
             }
 
             // イベントを設定
@@ -219,7 +188,6 @@
             $totalPriceForTechResearch.on("change", ReCalc);
             // - 無限火力の総額
             $totalPriceForINFFirepower.on("change", ReCalc);
-
             // - 獲得/寄付金貨単位 
             $coinUnitOfGettingAndDonation.on("change", function () {
                 var $selectElement = $(this).find("option:selected");
@@ -232,7 +200,6 @@
 
                 ReCalc();
             });
-
             // - 研究金貨単位
             $coinUnitOfTechResearch.on("change", function () {
                 var $selectElement = $(this).find("option:selected");
@@ -243,7 +210,6 @@
                 tempTaniRateA = ($selectElement.val() - $coinUnitOfGettingAndDonation.find("option:selected").val()) * 1000
 
                 // 計算用データを変数に格納
-                // TODO：直感だけどここ怪しいB24セル要確認
                 if ($unitOfCurrentExp.find("option:selected").val() - $coinUnitOfTechResearch.find("option:selected").val() > 0) {
                     tempTaniRateB = ($unitOfCurrentExp.find("option:selected").val() - $coinUnitOfTechResearch.find("option:selected").val()) * 1000;
                 }
