@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXP calculator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.0.min.js" integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+    <script>
+        // 単位の生成
+        var unitJson = {
+            "K": 93,
+            "M": 94,
+            "B": 95,
+            "T": 96,
+            "aa": 97,
+            "bb": 98,
+            "cc": 99,
+            "dd": 100,
+            "ee": 101,
+            "ff": 102,
+        };
+        // 勤労節約
+        var kinroJson = {
+            "Lv.0": 0,
+            "Lv.1": 1,
+            "Lv.2": 3,
+            "Lv.3": 5,
+            "Lv.4": 7,
+            "Lv.5": 9,
+            "Lv.6": 11,
+            "Lv.7": 13,
+            "Lv.8": 15,
+            "Lv.9": 17,
+            "Lv.10": 19,
+        }
+
+        // ドロップダウンセレクトの項目を追加する関数
+        function AddDropDownSelect($object, defaultSelectedKey, valuesJson = unitJson) {
+            Object.keys(valuesJson).forEach(key => {
+                // ドロップダウンセレクトの項目を追加
+                if (key != defaultSelectedKey) {
+                    $object.append($("<option>").val(valuesJson[key]).text(key));
+                }
+                // ドロップダウンセレクトの項目を追加（デフォルトキー）
+                else {
+                    $object.append($("<option>").val(valuesJson[key]).prop("selected", true).text(key));
+                }
+            });
+            return $object;
+        }
+
+        var tempGenka = 0; // 必要額原価
+        var tempMugenKaryokuGoHituyougaku = -324.275; // 無限火力後の必要額
+        var tempWaribikiriritu = 0.19; // 割引率 (小数)
+        var tempHyoujigakukaranoWaribikiriritu = 0.2261; //表示額からの割引率
+
+        var tempTaniRateA = -1000; //研究額÷獲得額 単位レート
+        var tempTaniRateB = 1; //現在Exp÷研究額 単位レート
+        var tempTaniRateC = 1; //必要Exp÷現在Exp 単位レート
+
+        $(function () {
+
+            // 初期化し再利用jQueryオブジェクトを$変数（慣例的にjQueryオブジェクトは初めに$を付ける）に代入
+            // - テキストボックス横の単位
+            var $currentAvailableCoinsUnit = $("#current_available_coins_unit").empty();
+            var $currentExpUnit = $("#current_exp_unit").empty();
+            var $nextLevelUpgradeExpUnit = $("#next_level_upgrade_exp_unit").empty();
+            var $availableCoinPerBoxUnit = $("#available_coin_per_box_unit").empty();
+            // var $techDiscountUnit = $("#tech_discount_unit").empty();
+            var $unitPriceForAllianceTechUnit = $("#unit_price_for_alliance_tech_unit").empty();
+            var $totalPriceForTechResearchUnit = $("#total_price_for_tech_research_unit").empty();
+            var $totalPriceForINFFirepowerUnit = $("#total_price_for_INF_firepower_unit").empty();
+            // - テキストボックス
+            var $currentAvailableCoins = $("#current_available_coins").empty();
+            var $currentExp = $("#current_exp").empty();
+            var $nextLevelUpgradeExp = $("#next_level_upgrade_exp").empty();
+            var $availableCoinPerBox = $("#available_coin_per_box").empty();
+            var $unitPriceForAllianceTech = $("#unit_price_for_alliance_tech").empty();
+            var $totalPriceForTechResearch = $("#total_price_for_tech_research").empty();
+            var $totalPriceForINFFirepower = $("#total_price_for_INF_firepower").empty();
+            // - ドロップダウンセレクト
+            var $techDiscount = $("#tech_discount").empty();
+            var $coinUnitOfGettingAndDonation = $("#coin_unit_of_getting_and_donation").empty();
+            var $coinUnitOfTechResearch = $("#coin_unit_of_tech_research").empty();
+            var $unitOfCurrentExp = $("#unit_of_current_exp").empty();
+            var $unitOfNextLvUpgradeExp = $("#unit_of_next_lv_upgrade_exp").empty();
+            // - 結果テキスト
+            var $totalPriceForLvup = $("#total_price_for_lvup").empty();
+            var $totalPriceForLvupWithInfFp = $("#total_price_for_lvup_with_inf_fp").empty();
+            var $allianceTechForLvup = $("#alliance_tech_for_lvup").empty();
+            var $allianceTechForLvupWithInfFp = $("#alliance_tech_for_lvup_with_inf_fp").empty();
+            var $neededCoinBoxesForLvupWithInfFp = $("#needed_coin_boxes_for_lvup_with_inf_fp").empty();
+            var $neededCoinBoxesForLvup = $("#needed_coin_boxes_for_lvup").empty();
+
+            // セットアップ
+            // - ドロップダウンセレクトに値を設定
+            AddDropDownSelect($techDiscount, "Lv.10", kinroJson);
+            AddDropDownSelect($coinUnitOfGettingAndDonation, "cc");
+            AddDropDownSelect($coinUnitOfTechResearch, "dd");
+            AddDropDownSelect($unitOfCurrentExp, "dd");
+            AddDropDownSelect($unitOfNextLvUpgradeExp, "dd");
+
+            // - インプットボックスの横の単位ラベルを設定
+            $currentAvailableCoinsUnit.text($coinUnitOfTechResearch.find("option:selected").text());
+            $currentExpUnit.text($unitOfCurrentExp.find("option:selected").text() + " Exp");
+            $nextLevelUpgradeExpUnit.text($unitOfNextLvUpgradeExp.find("option:selected").text() + " Exp");
+            $availableCoinPerBoxUnit.text($coinUnitOfGettingAndDonation.find("option:selected").text());
+            // $techDiscountUnit.text("%");
+            $unitPriceForAllianceTechUnit.text($coinUnitOfGettingAndDonation.find("option:selected").text());
+            $totalPriceForTechResearchUnit.text($coinUnitOfTechResearch.find("option:selected").text());
+            $totalPriceForINFFirepowerUnit.text($coinUnitOfTechResearch.find("option:selected").text());
+
+            // 結果計算
+            function ReCalc() {
+                console.log("ReCalc!");
+                tempGenka = (parseFloat($nextLevelUpgradeExp.val()) - parseFloat($currentExp.val()) * tempTaniRateC) * 5 * tempTaniRateB;
+                tempMugenKaryokuGoHituyougaku = tempGenka - (parseFloat($totalPriceForTechResearch.val()) + parseFloat($totalPriceForINFFirepower.val())) * (1 + tempWaribikiriritu)
+                tempWaribikiriritu = parseFloat($techDiscount.val()) / 100;
+                tempHyoujigakukaranoWaribikiriritu = (1 + tempWaribikiriritu) * tempWaribikiriritu
+                tempTaniRateA = ($coinUnitOfTechResearch.find("option:selected").val() - $coinUnitOfGettingAndDonation.find("option:selected").val()) * 1000
+                // 計算結果を設定
+
+                var totalPriceForLvupResult = parseFloat(tempGenka) - parseFloat($totalPriceForTechResearch.val()) * parseFloat(tempHyoujigakukaranoWaribikiriritu);
+                $totalPriceForLvup.text(totalPriceForLvupResult + $coinUnitOfTechResearch.find("option:selected").text());
+
+                var totalPriceForLvupWithInfFpResult = 0;
+                if (tempMugenKaryokuGoHituyougaku > 0) {
+                    totalPriceForLvupWithInfFpResult = tempGenka - (parseFloat($totalPriceForTechResearch.val()) + parseFloat($totalPriceForINFFirepower.val())) * tempHyoujigakukaranoWaribikiriritu
+                }
+                else {
+                    totalPriceForLvupWithInfFpResult = (parseFloat($totalPriceForLvup.text()) + parseFloat($totalPriceForINFFirepower.val()))
+                }
+                $totalPriceForLvupWithInfFp.text(totalPriceForLvupWithInfFpResult + $coinUnitOfTechResearch.find("option:selected").text());
+
+                var allianceTechForLvupResult = Math.ceil(parseFloat($totalPriceForLvup.text()) - parseFloat($totalPriceForTechResearch.val())) * tempTaniRateA / parseFloat($unitPriceForAllianceTech.val());
+                $allianceTechForLvup.text(allianceTechForLvupResult + "箱/boxes");
+                var allianceTechForLvupWithInfFpResult = Math.ceil((parseFloat($totalPriceForLvupWithInfFp.text()) - parseFloat($totalPriceForTechResearch.val())) * tempTaniRateA / parseFloat($unitPriceForAllianceTech.val())) | 0;
+                $allianceTechForLvupWithInfFp.text(allianceTechForLvupWithInfFpResult + "箱/boxes");
+                var neededCoinBoxesForLvupResult = Math.ceil((parseFloat($totalPriceForLvup.text()) - parseFloat($currentAvailableCoins.val())) * tempTaniRateA / parseFloat($availableCoinPerBox.val())) | 0;
+                $neededCoinBoxesForLvup.text(neededCoinBoxesForLvupResult + "箱/boxes");
+                var neededCoinBoxesForLvupWithInfFpResult = Math.ceil((parseFloat($totalPriceForLvupWithInfFp.text())) - parseFloat($currentAvailableCoins.val()) * tempTaniRateA / parseFloat($availableCoinPerBox.val())) | 0;
+                $neededCoinBoxesForLvupWithInfFp.text(totalPriceForLvupWithInfFpResult + "箱/boxes");
+
+                // console.log("必要額原価", tempGenka);
+                // console.log("無限火力後の必要額", tempMugenKaryokuGoHituyougaku);
+                // console.log("割引率 (小数)", tempWaribikiriritu);
+                // console.log("表示額からの割引率", tempHyoujigakukaranoWaribikiriritu);
+                // console.log("研究額÷獲得額 単位レート", tempTaniRateA);
+                // console.log("現在Exp÷研究額 単位レート", tempTaniRateB);
+                // console.log("必要Exp÷現在Exp 単位レート", tempTaniRateC);
+            }
+
+            // イベントを設定
+            // - 所持金貨
+            $currentAvailableCoins.on("change", ReCalc);
+            // - 現在Exp
+            $currentExp.on("change", ReCalc);
+            // - 次Lv必要Exp
+            $nextLevelUpgradeExp.on("change", ReCalc);
+            // - バンバン箱単価
+            $availableCoinPerBox.on("change", ReCalc);
+            // - 勤労節約
+            $techDiscount.on("change", ReCalc);
+            // - 連盟寄付単価
+            $unitPriceForAllianceTech.on("change", ReCalc);
+            // - 科学総額 (無限火力除く)
+            $totalPriceForTechResearch.on("change", ReCalc);
+            // - 無限火力の総額
+            $totalPriceForINFFirepower.on("change", ReCalc);
+
+            // - 獲得/寄付金貨単位 
+            $coinUnitOfGettingAndDonation.on("change", function () {
+                var $selectElement = $(this).find("option:selected");
+                // テキストボックス横の単位を設定
+                $availableCoinPerBoxUnit.text($selectElement.text());
+                $unitPriceForAllianceTechUnit.text($selectElement.text());
+
+                // 計算用データを変数に格納
+                tempTaniRateA = ($coinUnitOfTechResearch.find("option:selected").val() - $coinUnitOfGettingAndDonation.find("option:selected").val()) * 1000
+
+                ReCalc();
+            });
+
+            // - 研究金貨単位
+            $coinUnitOfTechResearch.on("change", function () {
+                var $selectElement = $(this).find("option:selected");
+                // テキストボックス横の単位を設定
+                $currentAvailableCoinsUnit.text($selectElement.text());
+                $totalPriceForTechResearchUnit.text($selectElement.text());
+                $totalPriceForINFFirepowerUnit.text($selectElement.text());
+                tempTaniRateA = ($selectElement.val() - $coinUnitOfGettingAndDonation.find("option:selected").val()) * 1000
+
+                // 計算用データを変数に格納
+                // TODO：直感だけどここ怪しいB24セル要確認
+                if ($unitOfCurrentExp.find("option:selected").val() - $coinUnitOfTechResearch.find("option:selected").val() > 0) {
+                    tempTaniRateB = ($unitOfCurrentExp.find("option:selected").val() - $coinUnitOfTechResearch.find("option:selected").val()) * 1000;
+                }
+                else {
+                    tempTaniRateB = 1;
+                }
+
+                ReCalc();
+            });
+
+            // - 現在Exp単位
+            $unitOfCurrentExp.on("change", function () {
+                var $selectElement = $(this).find("option:selected");
+                // テキストボックス横の単位を設定
+                $currentExpUnit.text($selectElement.text() + " Exp");
+
+                if ($unitOfCurrentExp.find("option:selected").val() - $coinUnitOfTechResearch.find("option:selected").val() > 0) {
+                    tempTaniRateB = ($unitOfCurrentExp.find("option:selected").val() - $coinUnitOfTechResearch.find("option:selected").val()) * 1000;
+                }
+                else {
+                    tempTaniRateB = 1;
+                }
+
+                if ($unitOfNextLvUpgradeExp.find("option:selected").val() - $unitOfCurrentExp.find("option:selected").val() > 0) {
+                    tempTaniRateC = ($unitOfCurrentExp.find("option:selected").val() - $coinUnitOfTechResearch.find("option:selected").val()) * 1000;
+                }
+                else {
+                    tempTaniRateC = 1;
+                }
+
+                ReCalc();
+            });
+            // - 次Lv必要Exp単位
+            $unitOfNextLvUpgradeExp.on("change", function () {
+                var $selectElement = $(this).find("option:selected");
+                // テキストボックス横の単位を設定
+                $nextLevelUpgradeExpUnit.text($selectElement.text() + " Exp");
+
+                if ($unitOfNextLvUpgradeExp.find("option:selected").val() - $unitOfCurrentExp.find("option:selected").val() > 0) {
+                    tempTaniRateC = ($unitOfCurrentExp.find("option:selected").val() - $coinUnitOfTechResearch.find("option:selected").val()) * 1000;
+                }
+                else {
+                    tempTaniRateC = 1;
+                }
+
+                ReCalc();
+            });
+
+        });
+    </script>
+
+    <style type="text/css">
+        /* 最外のコンテナ */
+        .ui.container {
+            padding-top: 2em;
+            line-height: 1.3;
+        }
+
+        /* 行をツメ気味 */
+        .ui.table td {
+            padding: 0.5rem;
+        }
+
+        /* 入力列の幅 */
+        .ui.table td:nth-child(2) {
+            width: 60%;
+        }
+
+        .results.ui.table td {
+            width: 30%;
+        }
+
+        .results.ui.table td:nth-child(1) {
+            width: inherit;
+        }
+
+        /* フッター */
+        .ui.footer.segment {
+            margin: 5em 0em 0em;
+            padding: 5em 0em;
+        }
+
+        /*
+         * テーブルの背景
+         */
+        .ui.row-green {
+            background-color: rgba(175, 208, 149, 0.7);
+        }
+
+        .ui.row-red {
+            background-color: rgba(255, 170, 149, 0.7);
+        }
+
+        .ui.row-blue {
+            background-color: rgba(180, 199, 220, 0.7);
+        }
+
+        .ui.row-yellow {
+            background-color: rgba(255, 233, 148, 0.7);
+        }
+
+        .ui.row-gray {
+            background-color: rgba(204, 204, 204, 0.7);
+        }
+
+        /*
+         * 英文コメント 
+         */
+        .ui.language {
+            display: inline-block;
+            font-size: 0.8em;
+            white-space: nowrap;
+            color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 3px;
+            border-radius: 1px;
+            min-width: 150px;
+        }
+
+        @media only screen and (min-width: 1200px) {
+            .ui.language {
+                display: inline-block;
+                min-width: 150px;
+            }
+        }
+
+        @media only screen and (max-width: 991px) and (min-width: 768px) {
+            .ui.grid.container {
+                width: calc(923px + 2rem) !important;
+            }
+        }
+
+        /*
+         * input属性の間違い箇所
+         */
+        input:invalid {
+            background-color: pink !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ui container">
+        <h1 class="ui header">Exp Calc</h1>
+    </div>
+
+    <div class="ui stackable relaxed two column grid container">
+        <div class="left aligned six wide column">
+            <h2>input</h2>
+            <table class="ui celled table">
+                <tbody>
+                    <tr class="ui row-green">
+                        <td>所持金貨<br><span class="ui language en">Current available coins</span></td>
+                        <td>
+                            <div class="ui fluid right labeled input">
+                                <input id="current_available_coins" type="number" min="0" step="0.01" placeholder="Current available coins">
+                                <div id="current_available_coins_unit" class="ui basic label">
+                                </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-green">
+                        <td>現在Exp<br><span class="ui language en">Current Exp</span></td>
+                        <td>
+                            <div class="ui fluid right labeled input">
+                                <input id="current_exp" type="number" min="0" step="0.1" placeholder="Current Exp">
+                                <div id="current_exp_unit" class="ui basic label">dd</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-green">
+                        <td>次Lv必要Exp<br><span class="ui language en">Next level upgrade Exp</span></td>
+                        <td>
+                            <div class="ui fluid right labeled input">
+                                <input id="next_level_upgrade_exp" type="number" min="0" step="0.1" placeholder="Next level upgrade Exp">
+                                <div id="next_level_upgrade_exp_unit" class="ui basic label">dd</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-red">
+                        <td>バンバン箱単価<br><span class="ui language en">Available coin per box</span></td>
+                        <td>
+                            <div class="ui fluid right labeled input">
+                                <input id="available_coin_per_box" type="number" min="0" step="0.01" placeholder="Available coin per box">
+                                <div id="available_coin_per_box_unit" class="ui basic label">dd</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-blue">
+                        <td>勤労節約<br><span class="ui language en">Tech discount</span></td>
+                        <td>
+                            <div class="ui form">
+                                <div class="field">
+                                    <select id="tech_discount" placeholder="Tech discount">
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-blue">
+                        <td>連盟寄付単価<br><span class="ui language en">Unit price for alliance tech</span></td>
+                        <td>
+                            <div class="ui fluid right labeled input">
+                                <input id="unit_price_for_alliance_tech" type="number" min="0" step="0.1" placeholder="Unit price for alliance tech">
+                                <div id="unit_price_for_alliance_tech_unit" class="ui basic label">dd</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-yellow">
+                        <td>科学総額 (無限火力除く)<br><span class="ui language en">Total price for tech research<br>[WITHOUT INF Firepower]</span></td>
+                        <td>
+                            <div class="ui fluid right labeled input">
+                                <input id="total_price_for_tech_research" type="number" min="0" step="0.1" placeholder="Total price for tech research">
+                                <div id="total_price_for_tech_research_unit" class="ui basic label">dd</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-yellow">
+                        <td>無限火力の総額<br><span class="ui language en">Total price for INF Firepower</span></td>
+                        <td>
+                            <div class="ui fluid right labeled input">
+                                <input id="total_price_for_INF_firepower" type="number" min="0" step="0.01" placeholder="Total price for INF Firepower">
+                                <div id="total_price_for_INF_firepower_unit" class="ui basic label">dd</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-gray">
+                        <td>獲得/寄付金貨単位 (aa以上)<br><span class="ui language en">Coin unit of getting/donation</span></td>
+                        <td>
+                            <div class="ui form">
+                                <div class="field">
+                                    <select id="coin_unit_of_getting_and_donation" placeholder="Coin unit of getting/donation">
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-gray">
+                        <td>研究金貨単位 (aa以上)<br><span class="ui language en">Coin unit of tech research</span></td>
+                        <td>
+                            <div class="ui form">
+                                <div class="field">
+                                    <select id="coin_unit_of_tech_research" placeholder="Coin unit of tech research">
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-gray">
+                        <td>現在Exp単位 (aa以上)<br><span class="ui language en">Unit of Current Exp</span></td>
+                        <td>
+                            <div class="ui form">
+                                <div class="field">
+                                    <select id="unit_of_current_exp" placeholder="Unit of Current Exp">
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-gray">
+                        <td>次Lv必要Exp単位 (aa以上)<br><span class="ui language en">Unit of Next lv upgrade Exp</span></td>
+                        <td>
+                            <div class="ui form">
+                                <div class="field">
+                                    <select id="unit_of_next_lv_upgrade_exp" placeholder="Unit of Next lv upgrade Exp">
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="left aligned ten wide column" style="overflow-y:auto;">
+            <h2>Result</h2>
+            <table class="ui stackable celled table results">
+                <thead>
+                    <tr class="ui row-gray">
+                        <th>結果<br><span class="ui language en">RESULT</span></th>
+                        <th>最大火力なし<br><span class="ui language en">WITHOUT INF FP</span></th>
+                        <th>最大火力あり<br><span class="ui language en">WITH INF FP</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="ui row-yellow">
+                        <td>次Lv必要金貨<br><span class="ui language en">Total price for LvUp</span></td>
+                        <td>
+                            <div class="ui fluid" id="total_price_for_lvup">
+                                -
+                            </div>
+                        </td>
+                        <td>
+                            <div class="ui fluid" id="total_price_for_lvup_with_inf_fp">
+                                -
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-blue">
+                        <td>連盟寄付必要回数<br><span class="ui language en">Alliance tech for LvUP</span></td>
+                        <td>
+                            <div class="ui fluid" id="alliance_tech_for_lvup">
+                                -
+                            </div>
+                        </td>
+                        <td>
+                            <div class="ui fluid" id="alliance_tech_for_lvup_with_inf_fp">
+                                -
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="ui row-red">
+                        <td>現時点のバンバン箱必要量<br><span class="ui language en">Needed coin boxes for LvUp</span></td>
+                        <td>
+                            <div class="ui fluid" id="needed_coin_boxes_for_lvup">
+                                -
+                            </div>
+                        </td>
+                        <td>
+                            <div class="ui fluid" id="needed_coin_boxes_for_lvup_with_inf_fp">
+                                -
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="ui piled segment">
+                <h4 class="ui header">備考</h4>
+                <div class="ui bulleted list">
+                    <div class="item">対象者は主にLv51以上のプレイヤーを想定</div>
+                    <div class="item">計算結果は概算であるため、あくまで目安程度に捉えること</div>
+                    <div class="item">「獲得/寄付金貨単位」には、バンバン箱や連盟寄付に使われる金貨単位を記入する。</div>
+                    <div class="item">「研究金貨単位」には、建造や訓練加速の研究で用いる金貨単位を記入する。</div>
+                    <div class="item">
+                        <div>所持金貨額と科学研究額は「研究金貨単位」に記入した単位に揃えた額を記入する。</div>
+                        <div class="list">
+                            <div class="item">研究金貨単位がdd・所持金貨が300ccの場合、所持金貨は300/1000=0.3ddで入力。</div>
+                            <div class="item">研究金貨単位がdd・無限火力が1.1eeの場合、無限火力額は1.1×1000=1100ddで入力。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ui inverted vertical footer segment">
+        <div class="ui center aligned container">
+            <div class="ui horizontal inverted small divided link list">
+                rev.20200429
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
