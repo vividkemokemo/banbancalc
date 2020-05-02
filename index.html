@@ -326,19 +326,67 @@
             background-color: rgba(255, 255, 255, 0.5);
             padding: 3px;
             border-radius: 1px;
-            min-width: 150px;
         }
 
-        @media only screen and (min-width: 1200px) {
-            .ui.language {
-                display: inline-block;
-                min-width: 150px;
-            }
-        }
 
         @media only screen and (max-width: 991px) and (min-width: 768px) {
             .ui.grid.container {
                 width: calc(923px + 2rem) !important;
+            }
+        }
+
+        /*
+         * モバイル時のみ非表示
+         */
+        @media only screen and (max-width: 769px) {
+            .mobile.only.invisible {
+                display: none !important;
+            }
+        }
+
+        /*
+         * モバイル時のみ表示
+         */
+        .mobile.only.visible {
+            display: none;
+        }
+        @media only screen and (max-width: 769px) {
+            .mobile.only.visible {
+                display: inline-block !important;
+            }
+        }
+
+        .inlinespacer {
+            width: 0.5em;
+        }
+
+        /*
+         * テーブル内サブラベル
+         */
+        td .ui.sublabel {
+            width: 100%;
+            border-bottom: 1px dotted #555;
+            border-radius: 0;
+            background-color: transparent;
+            font-weight: 700;
+            font-size: 0.7em;
+            padding: .5833em .833em;
+            padding-bottom: 0.25em;
+        }
+
+        /*
+         * 結果表示
+         */
+        td .ui.result {
+            font-weight: 700;
+            text-indent: 1em;
+            font-size: 1.4em;
+            padding-top: 0.5em;
+            padding-bottom: 0.5em;
+        }
+        @media only screen and (max-width: 769px) {
+            td .ui.result {
+                font-size: 2em;
             }
         }
 
@@ -357,12 +405,16 @@
     </div>
 
     <div class="ui stackable relaxed two column grid container">
-        <div class="left aligned six wide column">
+        <div class="left aligned seven wide column">
             <h2>input</h2>
             <table class="ui celled table">
                 <tbody>
                     <tr class="ui row-green">
-                        <td>所持金貨<br><span class="ui language en">Current available coins</span></td>
+                        <td>
+                            所持金貨
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Current available coins</span>
+                        </td>
                         <td>
                             <div class="ui fluid right labeled input">
                                 <input id="current_available_coins" type="number" min="0" step="0.01" placeholder="Current available coins">
@@ -371,7 +423,11 @@
                         </td>
                     </tr>
                     <tr class="ui row-green">
-                        <td>現在Exp<br><span class="ui language en">Current Exp</span></td>
+                        <td>
+                            現在Exp
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Current Exp</span>
+                        </td>
                         <td>
                             <div class="ui fluid right labeled input">
                                 <input id="current_exp" type="number" min="0" step="0.1" placeholder="Current Exp">
@@ -380,7 +436,10 @@
                         </td>
                     </tr>
                     <tr class="ui row-green">
-                        <td>次Lv必要Exp<br><span class="ui language en">Next level upgrade Exp</span></td>
+                        <td>次Lv必要Exp
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Next level upgrade Exp</span>
+                        </td>
                         <td>
                             <div class="ui fluid right labeled input">
                                 <input id="next_level_upgrade_exp" type="number" min="0" step="0.1" placeholder="Next level upgrade Exp">
@@ -389,7 +448,11 @@
                         </td>
                     </tr>
                     <tr class="ui row-red">
-                        <td>バンバン箱単価<br><span class="ui language en">Available coin per box</span></td>
+                        <td>
+                            バンバン箱単価
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Available coin per box</span>
+                        </td>
                         <td>
                             <div class="ui fluid right labeled input">
                                 <input id="available_coin_per_box" type="number" min="0" step="0.01" placeholder="Available coin per box">
@@ -398,7 +461,10 @@
                         </td>
                     </tr>
                     <tr class="ui row-blue">
-                        <td>勤労節約<br><span class="ui language en">Tech discount</span></td>
+                        <td>勤労節約
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Tech discount</span>
+                        </td>
                         <td>
                             <div class="ui form">
                                 <div class="field">
@@ -409,7 +475,11 @@
                         </td>
                     </tr>
                     <tr class="ui row-blue">
-                        <td>連盟寄付単価<br><span class="ui language en">Unit price for alliance tech</span></td>
+                        <td>
+                            連盟寄付単価
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Unit price for alliance tech</span>
+                        </td>
                         <td>
                             <div class="ui fluid right labeled input">
                                 <input id="unit_price_for_alliance_tech" type="number" min="0" step="0.1" placeholder="Unit price for alliance tech">
@@ -418,7 +488,14 @@
                         </td>
                     </tr>
                     <tr class="ui row-yellow">
-                        <td>科学総額 (無限火力除く)<br><span class="ui language en">Total price for tech research<br>[WITHOUT INF Firepower]</span></td>
+                        <td>
+                            科学総額 (無限火力除く)
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">
+                                Total price for tech research
+                                <br class="mobile only invisible"><span class="mobile only visible inlinespacer">
+                                </span>[WITHOUT INF Firepower]</span>
+                        </td>
                         <td>
                             <div class="ui fluid right labeled input">
                                 <input id="total_price_for_tech_research" type="number" min="0" step="0.01" placeholder="Total price for tech research">
@@ -427,7 +504,11 @@
                         </td>
                     </tr>
                     <tr class="ui row-yellow">
-                        <td>無限火力の総額<br><span class="ui language en">Total price for INF Firepower</span></td>
+                        <td>
+                            無限火力の総額
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Total price for INF Firepower</span>
+                        </td>
                         <td>
                             <div class="ui fluid right labeled input">
                                 <input id="total_price_for_INF_firepower" type="number" min="0" step="0.01" placeholder="Total price for INF Firepower">
@@ -436,7 +517,11 @@
                         </td>
                     </tr>
                     <tr class="ui row-gray">
-                        <td>獲得/寄付金貨単位 (aa以上)<br><span class="ui language en">Coin unit of getting/donation</span></td>
+                        <td>
+                            獲得/寄付金貨単位
+                            <br>
+                            <span class="ui language en">Coin unit of getting/donation</span>
+                        </td>
                         <td>
                             <div class="ui form">
                                 <div class="field">
@@ -447,7 +532,11 @@
                         </td>
                     </tr>
                     <tr class="ui row-gray">
-                        <td>研究金貨単位 (aa以上)<br><span class="ui language en">Coin unit of tech research</span></td>
+                        <td>
+                            研究金貨単位
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Coin unit of tech research</span>
+                        </td>
                         <td>
                             <div class="ui form">
                                 <div class="field">
@@ -458,7 +547,11 @@
                         </td>
                     </tr>
                     <tr class="ui row-gray">
-                        <td>現在Exp単位 (aa以上)<br><span class="ui language en">Unit of Current Exp</span></td>
+                        <td>
+                            現在Exp単位
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Unit of Current Exp</span>
+                        </td>
                         <td>
                             <div class="ui form">
                                 <div class="field">
@@ -469,7 +562,11 @@
                         </td>
                     </tr>
                     <tr class="ui row-gray">
-                        <td>次Lv必要Exp単位 (aa以上)<br><span class="ui language en">Unit of Next lv upgrade Exp</span></td>
+                        <td>
+                            次Lv必要Exp単位
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Unit of Next lv upgrade Exp</span>
+                        </td>
                         <td>
                             <div class="ui form">
                                 <div class="field">
@@ -482,52 +579,88 @@
                 </tbody>
             </table>
         </div>
-        <div class="left aligned ten wide column" style="overflow-y:auto;">
+        <div class="left aligned wide column" style="overflow-y:auto;">
             <h2>Result</h2>
             <table class="ui stackable celled table results">
-                <thead>
+                <thead class="mobile only invisible">
                     <tr class="ui row-gray">
                         <th>結果<br><span class="ui language en">RESULT</span></th>
-                        <th>最大火力なし<br><span class="ui language en">WITHOUT INF FP</span></th>
-                        <th>最大火力あり<br><span class="ui language en">WITH INF FP</span></th>
+                        <th>無限火力なし<br><span class="ui language en">WITHOUT INF FP</span></th>
+                        <th>無限火力あり<br><span class="ui language en">WITH INF FP</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr class="ui row-yellow">
-                        <td>次Lv必要金貨<br><span class="ui language en">Total price for LvUp</span></td>
                         <td>
-                            <div class="ui fluid" id="total_price_for_lvup">
+                            次Lv必要金貨
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Total price for LvUp</span>
+                        </td>
+                        <td>
+                            <div class="ui sublabel mobile only visible">
+                                無限火力なし
+                                <span class="mobile only visible inlinespacer"></span><span class="ui language en">WITHOUT INF FP</span>
+                            </div>
+                            <div class="ui result" id="total_price_for_lvup">
                                 -
                             </div>
                         </td>
                         <td>
-                            <div class="ui fluid" id="total_price_for_lvup_with_inf_fp">
+                            <div class="ui sublabel mobile only visible">
+                                無限火力あり
+                                <span class="mobile only visible inlinespacer"></span><span class="ui language en">WITHOUT INF FP</span>
+                            </div>
+                            <div class="ui result" id="total_price_for_lvup_with_inf_fp">
                                 -
                             </div>
                         </td>
                     </tr>
                     <tr class="ui row-blue">
-                        <td>連盟寄付必要回数<br><span class="ui language en">Alliance tech for LvUP</span></td>
                         <td>
-                            <div class="ui fluid" id="alliance_tech_for_lvup">
+                            連盟寄付必要回数
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Alliance tech for LvUP</span>
+                        </td>
+                        <td>
+                            <div class="ui sublabel mobile only visible">
+                                無限火力なし
+                                <span class="mobile only visible inlinespacer"></span><span class="ui language en">WITHOUT INF FP</span>
+                            </div>
+                            <div class="ui result" id="alliance_tech_for_lvup">
                                 -
                             </div>
                         </td>
                         <td>
-                            <div class="ui fluid" id="alliance_tech_for_lvup_with_inf_fp">
+                            <div class="ui sublabel mobile only visible">
+                                無限火力あり
+                                <span class="mobile only visible inlinespacer"></span><span class="ui language en">WITHOUT INF FP</span>
+                            </div>
+                            <div class="ui result" id="alliance_tech_for_lvup_with_inf_fp">
                                 -
                             </div>
                         </td>
                     </tr>
                     <tr class="ui row-red">
-                        <td>現時点のバンバン箱必要量<br><span class="ui language en">Needed coin boxes for LvUp</span></td>
                         <td>
-                            <div class="ui fluid" id="needed_coin_boxes_for_lvup">
+                            現時点のバンバン箱必要量
+                            <br class="mobile only invisible"><span class="mobile only visible inlinespacer"></span>
+                            <span class="ui language en">Needed coin boxes for LvUp</span>
+                        </td>
+                        <td>
+                            <div class="ui sublabel mobile only visible">
+                                無限火力なし
+                                <span class="mobile only visible inlinespacer"></span><span class="ui language en">WITHOUT INF FP</span>
+                            </div>
+                            <div class="ui result" id="needed_coin_boxes_for_lvup">
                                 -
                             </div>
                         </td>
                         <td>
-                            <div class="ui fluid" id="needed_coin_boxes_for_lvup_with_inf_fp">
+                            <div class="ui sublabel mobile only visible">
+                                無限火力あり
+                                <span class="mobile only visible inlinespacer"></span><span class="ui language en">WITHOUT INF FP</span>
+                            </div>
+                            <div class="ui result" id="needed_coin_boxes_for_lvup_with_inf_fp">
                                 -
                             </div>
                         </td>
