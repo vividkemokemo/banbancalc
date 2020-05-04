@@ -88,7 +88,7 @@
             var $coinUnitOfTechResearch = $("#coin_unit_of_tech_research").empty();
             var $unitOfCurrentExp = $("#unit_of_current_exp").empty();
             var $unitOfNextLvUpgradeExp = $("#unit_of_next_lv_upgrade_exp").empty();
-            // - 結果テキスト
+            // - 結果テキスト$totalPriceForLvupWithInfFp
             var $totalPriceForLvup = $("#total_price_for_lvup").empty();
             var $totalPriceForLvupWithInfFp = $("#total_price_for_lvup_with_inf_fp").empty();
             var $allianceTechForLvup = $("#alliance_tech_for_lvup").empty();
@@ -141,7 +141,7 @@
                     totalPriceForLvupWithInfFpResult = tempGenka - (parseFloat($totalPriceForTechResearch.val()) + parseFloat($totalPriceForINFFirepower.val())) * tempHyoujigakukaranoWaribikiriritu
                 }
                 else {
-                    totalPriceForLvupWithInfFpResult = (parseFloat($totalPriceForLvup.text()) + parseFloat($totalPriceForINFFirepower.val()))
+                    totalPriceForLvupWithInfFpResult = (parseFloat($totalPriceForINFFirepower.val()))
                 }
                 $totalPriceForLvupWithInfFp.text(totalPriceForLvupWithInfFpResult + $coinUnitOfTechResearch.find("option:selected").text());
                 // - 連盟寄付必要回数(無限火力なし)
